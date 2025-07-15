@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Alert,
@@ -29,6 +29,13 @@ import useBudgetData from "../../../hooks/budget/useBudgetData";
 import { calculateTotals } from "../../../utils/budget/budgetCalculations";
 import axiosInstance from "../../../services/api/axiosConfig";
 import showAlert from "../../../utils/functions";
+import { getUserId } from "../../../utils/timeManagement/operationTime";
+
+const defaultProducts = [
+  { id: "alfaros", productId: 1, name: "Alfaros", quantity: 2650 },
+  { id: "betacos", productId: 2, name: "Betacos", quantity: 1920 },
+  { id: "gamaroles", productId: 3, name: "Gamaroles", quantity: 1060 },
+];
 
 /**
  * Componente para el presupuesto de ventas
@@ -40,16 +47,56 @@ import showAlert from "../../../utils/functions";
 const SalesBudget = ({ budgetConfig, theme, budgetType, onSuccess }) => {
   // Estado para diálogo de confirmación
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Productos para el presupuesto de ventas
-  const products = [
-    { id: "alfaros", productId: 1, name: "Alfaros", defaultValue: 2650 },
-    { id: "betacos", productId: 2, name: "Betacos", defaultValue: 1920 },
-    { id: "gamaroles", productId: 3, name: "Gamaroles", defaultValue: 1060 },
-  ];
+  const [products, setProducts] = useState(defaultProducts);
 
-  // Hook para manejar los datos del presupuesto
-  const budgetData = useBudgetData(products);
+  useEffect(() => {
+    const fetchProjectedSales = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const userId = getUserId();
+
+        const response = await axiosInstance.get(
+          `/salesbudget/getProjectSales/${userId}`
+        );
+
+        const data = response?.data?.data ?? [];
+
+        if (data.length > 0) {
+          const formatted = data.map((item) => ({
+            id: (item.Product?.name ?? "desconocido").toLowerCase(),
+            productId: item.Product?.id ?? null,
+            name: item.Product?.name ?? "Sin nombre",
+            quantity: Number(item.quantity),
+          }));
+          setProducts(formatted);
+        } else {
+          setProducts(defaultProducts);
+        }
+      } catch (err) {
+        console.error("Error al obtener proyecciones de ventas:", err);
+
+        if (err.response?.data?.message) {
+          setError(err.response.data.message);
+        } else {
+          setError("No se pudo cargar la proyección de ventas.");
+        }
+
+        setProducts(defaultProducts);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjectedSales();
+  }, []);
+
+ const budgetData = useBudgetData(products, setProducts);
 
   const {
     selectedMonth,
@@ -115,7 +162,7 @@ const SalesBudget = ({ budgetConfig, theme, budgetType, onSuccess }) => {
     try {
       const formattedData = products.map(item => ({
         product_id: item.productId,
-        quantity: item.defaultValue,
+        quantity: item.quantity,
         created_by: createdBy
       }));
 
@@ -220,7 +267,7 @@ const SalesBudget = ({ budgetConfig, theme, budgetType, onSuccess }) => {
         showSaveButton={isFirstMonth}
       />
 
-    
+
 
       {/* Tabla de Resultados */}
       <BudgetResultsTable

@@ -9,13 +9,6 @@ import {
 import InsightsIcon from "@mui/icons-material/Insights";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp"; // Icono para la derecha
 
-const factors = [
-  { label: "Marketing", value: "+8%" },
-  { label: "Vendedores (2)", value: "+6%" },
-  { label: "Políticas Crédito", value: "+5%" },
-  { label: "Competitividad", value: "+2%" }
-];
-
 const getColor = (value, theme) => {
   if (!value) return theme.palette.text.secondary;
   const numeric = parseFloat(value);
@@ -26,7 +19,7 @@ const getColor = (value, theme) => {
   return theme.palette.text.secondary;
 };
 
-const ProbabilityFactors = () => {
+const ProbabilityFactors = ({ factors }) => {
   const theme = useTheme();
 
   return (

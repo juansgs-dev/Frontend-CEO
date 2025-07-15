@@ -20,13 +20,7 @@ import {
 } from "@mui/material";
 import BarChartIcon from "@mui/icons-material/BarChart";
 
-const data = [
-  { name: "Década 1", Meta: 140000000, Real: 100000000, Proyectado: 120000000 },
-  { name: "Década 2", Meta: 105000000, Real: 90000000, Proyectado: 95000000 },
-  { name: "Década 3", Meta: 70000000, Real: 50000000, Proyectado: 60000000 },
-];
-
-const SalesBarChart = () => {
+const SalesBarChart = ({ data }) => {
   const theme = useTheme();
 
   return (
@@ -76,11 +70,6 @@ const SalesBarChart = () => {
                 iconSize={12}
                 verticalAlign="bottom"
                 height={16}
-              />
-              <Bar
-                dataKey="Meta"
-                fill={theme.palette.grey[700]}
-                radius={[4, 4, 0, 0]}
               />
               <Bar
                 dataKey="Real"

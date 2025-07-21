@@ -12,25 +12,30 @@ const MonthProgress = () => {
   const theme = useTheme();
   const [currentProgress, setCurrentProgress] = useState(0);
 
-  const [progressData, setProgressData] = useState({
-    currentMonth: 1,
-    currentDecade: 1,
-    isDecember: false,
-    elapsedMinutes: 0,
-  });
+const [progressData, setProgressData] = useState(() => {
+  const stored = localStorage.getItem(PROGRESS_MONTH_KEY);
+  return stored
+    ? JSON.parse(stored)
+    : { currentMonth: 1, currentDecade: 1, isDecember: false, elapsedMinutes: 0 };
+});
 
-  const [operationStatus, setOperationStatus] = useState({
-    completedTabs: 0,
-    totalTabs: 5,
-    isSetupComplete: false,
-    operationStarted: false,
-  });
+const [operationStatus, setOperationStatus] = useState(() => {
+  const stored = localStorage.getItem(OPERATION_STATUS_KEY);
+  return stored
+    ? JSON.parse(stored)
+    : {
+        completedTabs: 0,
+        totalTabs: 5,
+        isSetupComplete: false,
+        operationStarted: false,
+      };
+});
 
   const [previousDecade, setPreviousDecade] = useState(null);
   const [previousMonth, setPreviousMonth] = useState(null);
 
   useEffect(() => {
-    const rawStatus = localStorage.getItem("operationStatus");
+    const rawStatus = localStorage.getItem(OPERATION_STATUS_KEY);
     if (!rawStatus) return;
 
     const status = JSON.parse(rawStatus);
@@ -103,7 +108,7 @@ const MonthProgress = () => {
   }, []);
 
   useEffect(() => {
-    const setupStatus = JSON.parse(localStorage.getItem("operationStatus"));
+    const setupStatus = JSON.parse(localStorage.getItem("OPERATION_STATUS_KEY"));
 
     if (setupStatus?.isSetupComplete &&
       (progressData.currentMonth !== previousMonth || progressData.currentDecade !== previousDecade)) {

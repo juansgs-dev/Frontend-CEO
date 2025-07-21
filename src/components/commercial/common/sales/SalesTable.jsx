@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableHead,
@@ -11,95 +11,108 @@ import {
   Typography,
   Box,
   useTheme,
+  Pagination,
+  TableSortLabel,
 } from "@mui/material";
 
-const mockData = [
-  {
-    id: "V2025-0301",
-    date: "2025-01-03 09:30",
-    product: "Alfaros",
-    quantity: 350,
-    total: "$22.750.000",
-    client: "Distribuidora XYZ",
-    type: "Mayorista",
-    payment: "Crédito 30 días",
-    seller: "Juan Pérez",
-    status: "Entregado",
-  },
-  {
-    id: "V2025-0302",
-    date: "2025-01-03 11:15",
-    product: "Betacos",
-    quantity: 45,
-    total: "$2.250.000",
-    client: "Comercial ABC",
-    type: "Minorista",
-    payment: "Contado",
-    seller: "María López",
-    status: "Entregado",
-  },
-];
-
 const getTypeColor = (type) =>
-  type === "Mayorista" ? "info" : type === "Minorista" ? "warning" : "default";
+  type === "Empresa"
+    ? "info"
+    : type === "Cliente Mayorista"
+    ? "primary"
+    : type === "Cliente Natural"
+    ? "warning"
+    : "default";
 
-const SalesTable = ({ filters }) => {
+const SalesTable = ({ sales = [], filters, page, setPage, totalPages }) => {
   const theme = useTheme();
 
-  const filtered = mockData.filter((item) => {
-    const matchVendor =
-      filters.vendor === "Todos" || item.seller === filters.vendor;
+  const [sortField, setSortField] = useState(null);
+  const [sortDirection, setSortDirection] = useState(null);
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else if (sortDirection === "desc") {
+        setSortField(null);
+        setSortDirection(null); // sin ordenar
+      } else {
+        setSortDirection("asc");
+      }
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const filtered = sales.filter((item) => {
     const matchType = filters.type === "Todos" || item.type === filters.type;
     const matchSearch =
       filters.search === "" ||
-      item.id.toLowerCase().includes(filters.search.toLowerCase()) ||
+      item.id.toString().toLowerCase().includes(filters.search.toLowerCase()) ||
       item.client.toLowerCase().includes(filters.search.toLowerCase());
-
-    return matchVendor && matchType && matchSearch;
+    return matchType && matchSearch;
   });
+
+  const sorted = sortField
+    ? [...filtered].sort((a, b) => {
+        const aValue = a[sortField];
+        const bValue = b[sortField];
+
+        if (aValue == null || bValue == null) return 0;
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortDirection === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        }
+
+        if (typeof aValue === "number" && typeof bValue === "number") {
+          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+        }
+
+        return 0;
+      })
+    : filtered;
 
   return (
     <Box mt={3}>
       <TableContainer component={Paper} elevation={2}>
         <Table size="small">
           <TableHead>
-            <TableRow
-              sx={{
-                backgroundColor: theme.palette.primary.main,
-              }}
-            >
+            <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
               {[
-                "ID Venta",
-                "Producto",
-                "Cantidad",
-                "Valor Total",
-                "Cliente",
-                "Tipo",
-                "Pago",
-                "Vendedor",
-                "Estado",
-                "Fecha",
-              ].map((header, idx) => (
-                <TableCell key={idx}>
-                  <Typography
-                    variant="body2"
-                    fontWeight={600}
-                    color="common.white"
+                { label: "ID Venta", field: "id" },
+                { label: "Producto", field: "product" },
+                { label: "Cantidad", field: "quantity" },
+                { label: "Valor Total", field: "total" },
+                { label: "Cliente", field: "client" },
+                { label: "Tipo", field: "type" },
+                { label: "Pago", field: "payment" },
+                { label: "Fecha", field: "date" },
+              ].map(({ label, field }) => (
+                <TableCell key={field}>
+                  <TableSortLabel
+                    active={sortField === field}
+                    direction={sortField === field && sortDirection ? sortDirection : "asc"}
+                    onClick={() => handleSort(field)}
+                    sx={{ color: "white", "& .MuiSvgIcon-root": { color: "white" } }}
                   >
-                    {header}
-                  </Typography>
+                    <Typography variant="body2" fontWeight={600} color="common.white">
+                      {label}
+                    </Typography>
+                  </TableSortLabel>
                 </TableCell>
               ))}
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {filtered.map((row) => (
+            {sorted.map((row) => (
               <TableRow key={row.id} hover>
                 <TableCell>
-                  <Typography fontWeight={500}>
-                    {row.id.replace(/^V\d+-/, "")}
-                  </Typography>
+                  <Typography fontWeight={500}>{row.id}</Typography>
                 </TableCell>
                 <TableCell>{row.product}</TableCell>
                 <TableCell>{row.quantity}</TableCell>
@@ -108,16 +121,14 @@ const SalesTable = ({ filters }) => {
                 </TableCell>
                 <TableCell>{row.client}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={row.type}
-                    size="small"
-                    color={getTypeColor(row.type)}
-                  />
+                  <Chip label={row.type} size="small" color={getTypeColor(row.type)} />
                 </TableCell>
-                <TableCell>{row.payment}</TableCell>
-                <TableCell>{row.seller}</TableCell>
                 <TableCell>
-                  <Chip label={row.status} color="success" size="small" />
+                  <Chip
+                    label={row.payment === "Pagado" ? "Pagado" : "Pendiente"}
+                    size="small"
+                    color={row.payment === "Pagado" ? "success" : "error"}
+                  />
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
@@ -129,6 +140,15 @@ const SalesTable = ({ filters }) => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Box mt={2} display="flex" justifyContent="center">
+        <Pagination
+          count={totalPages}
+          page={page}
+          onChange={(e, value) => setPage(value)}
+          color="primary"
+        />
+      </Box>
     </Box>
   );
 };

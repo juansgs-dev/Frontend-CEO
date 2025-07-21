@@ -19,40 +19,6 @@ import InfoCard from "../../common/infoCard";
 import useIndicator from "../hooks/useIndicator";
 import useProductInventory from "../hooks/useProductInventory";
 
-
-const productData = [
-  {
-    name: "Alfaros",
-    unitPrice: 65000,
-    monthlyGoal: 2650,
-    soldD1: 1650,
-    stock: 250,
-    coverage: 9,
-    baseProbability: 70,
-    priceFactor: -2
-  },
-  {
-    name: "Betacos",
-    unitPrice: 50000,
-    monthlyGoal: 2650,
-    soldD1: 2300,
-    stock: 250,
-    coverage: 9,
-    baseProbability: 70,
-    priceFactor: -2
-  },
-  {
-    name: "Gamaroles",
-    unitPrice: 65000,
-    monthlyGoal: 2650,
-    soldD1: 850,
-    stock: 250,
-    coverage: 9,
-    baseProbability: 70,
-    priceFactor: -2
-  }
-];
-
 const receivableData = [
   {
     term: 30,
@@ -78,18 +44,16 @@ const SalesDashboardView = () => {
     projectedTotalsByDecade,
     projectedPercentagesByDecade,
     numSellers,
+    productData,
     loading,
     error
   } = useIndicator();
 
-  console.log(totalsByDecade, percentagesByDecade, totalProjectedMonth, projectedPercentagesByDecade);
 
   const { products } = useProductInventory();
 
   const totalPercent = products.reduce((acc, item) => acc + (item.investment_percent || 0), 0);
   const averagePercent = products.length > 0 ? totalPercent / products.length : 0;
-
-  console.log(products);
 
   const indicatorsData = indicators.map((item) => {
     let icon = null;

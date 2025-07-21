@@ -10,6 +10,7 @@ const useIndicator = () => {
   const [totalProjectedMonth, setTotalProjectedMonth] = useState(0);
   const [projectedTotalsByDecade, setProjectedTotalsByDecade] = useState({});
   const [projectedPercentagesByDecade, setProjectedPercentagesByDecade] = useState({});
+  const [productData, setProductData] = useState([]);
   const [numSellers, setnumSellers] = useState(0);
 
   const [loading, setLoading] = useState(true);
@@ -43,6 +44,7 @@ const useIndicator = () => {
         setProjectedTotalsByDecade(data.projectedTotalsByDecade || {});
         setProjectedPercentagesByDecade(data.projectedPercentagesByDecade || {});
         setnumSellers(data.numSellers || 0);
+        setProductData(data.productData || []);
 
       } catch (err) {
         console.error('Error al obtener indicadores:', err);
@@ -64,6 +66,7 @@ const useIndicator = () => {
     projectedTotalsByDecade,
     projectedPercentagesByDecade,
     numSellers,
+    productData,
     loading,
     error,
   };

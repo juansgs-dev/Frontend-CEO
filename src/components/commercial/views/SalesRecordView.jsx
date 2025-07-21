@@ -17,72 +17,107 @@ import PercentIcon from "@mui/icons-material/Percent";
 
 import SalesTable from "../common/sales/SalesTable";
 import SalesIndicatorCard from "../common/sales/SalesIndicatorCard";
+import useIndicatorRecords from "../hooks/useIndicatorRecords";
+import { PROGRESS_MONTH_KEY } from "../../../utils/timeManagement/operationTime";
+import useSalesRecords from "../hooks/useSalesRecords";
 
 
-const vendors = ["Todos", "Juan Pérez", "María López"];
-const types = ["Todos", "Mayorista", "Minorista"];
+const types = ["Todos", "Empresa", "Cliente Mayorista", "Cliente Natural"];
 
 const SalesRecordView = () => {
+    const [progressData, setProgressData] = useState(() => {
+        const stored = localStorage.getItem(PROGRESS_MONTH_KEY);
+        return stored
+            ? JSON.parse(stored)
+            : { currentMonth: 1, currentDecade: 1, isDecember: false, elapsedMinutes: 0 };
+    });
+
+
+    const [page, setPage] = useState(1);
+
+    const pageSize = 10;
+
+    const monthsOptions = ["Todos", ...Array.from({ length: progressData.currentMonth }, (_, i) => i + 1)];
+    const decadesOptions = ["Todos", 1, 2, 3];
+
     const [filters, setFilters] = useState({
-        vendor: "Todos",
         type: "Todos",
         search: "",
+        month: "Todos",
+        decade: "Todos",
+    });
+
+    const { indicators } = useIndicatorRecords(filters);
+    const { sales, loading, error, totalPages } = useSalesRecords(filters, page, pageSize);
+
+    const recordsData = indicators.map((item) => {
+        let icon = null;
+        let colorKey = item.colorKey || "blue";
+        let subtitle = item.subtitle || "";
+
+        switch (item.title) {
+            case "Total Vendido":
+                icon = <MonetizationOnIcon fontSize="large" />;
+                break;
+            case "Ventas Mayoristas":
+                icon = <StorefrontIcon fontSize="large" />;
+                break;
+            case "Ventas Minoristas":
+                icon = <ShoppingCartIcon fontSize="large" />;
+                break;
+            case "Comisiones":
+                icon = <PercentIcon fontSize="large" />;
+                break;
+            default:
+                icon = null;
+        }
+
+        return {
+            ...item,
+            icon,
+            colorKey,
+            subtitle,
+        };
     });
 
     const handleChange = (field, value) => {
         setFilters({ ...filters, [field]: value });
+        setPage(1);
     };
-
-    const indicators = [
-        {
-            title: "Total Vendido",
-            value: "$25.000.000",
-            subtitle: "15 ventas",
-            icon: <MonetizationOnIcon fontSize="large" />,
-            colorKey: "green",
-        },
-        {
-            title: "Ventas Mayoristas",
-            value: "$22.750.000",
-            subtitle: "5 clientes",
-            icon: <StorefrontIcon fontSize="large" />,
-            colorKey: "blue",
-        },
-        {
-            title: "Ventas Minoristas",
-            value: "$2.250.000",
-            subtitle: "10 clientes",
-            icon: <ShoppingCartIcon fontSize="large" />,
-            colorKey: "orange",
-        },
-        {
-            title: "Comisiones",
-            value: "$250.000",
-            subtitle: "2 vendedores",
-            icon: <PercentIcon fontSize="large" />,
-            colorKey: "purple",
-        },
-    ];
 
     return (
         <Box>
             {/* Filtros */}
             <Grid container spacing={2} mb={2}>
                 <Grid item xs={12} sm={4} md={3}>
-                    <Typography variant="subtitle2">Década Actual</Typography>
-                </Grid>
-                <Grid item xs={12} sm={4} md={3}>
                     <TextField
-                        label="Vendedor"
+                        label="Mes"
                         select
                         fullWidth
                         size="small"
-                        value={filters.vendor}
-                        onChange={(e) => handleChange("vendor", e.target.value)}
+                        value={filters.month}
+                        onChange={(e) => handleChange("month", e.target.value)}
                     >
-                        {vendors.map((v) => (
-                            <MenuItem key={v} value={v}>
-                                {v}
+                        {monthsOptions.map((m) => (
+                            <MenuItem key={m} value={m}>
+                                {m === "Todos" ? "Todos" : `Mes ${m}`}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Grid>
+
+                <Grid item xs={12} sm={4} md={3}>
+                    <TextField
+                        label="Década"
+                        select
+                        fullWidth
+                        size="small"
+                        value={filters.decade}
+                        onChange={(e) => handleChange("decade", e.target.value)}
+                    >
+                        {decadesOptions.map((d) => (
+                            <MenuItem key={d} value={d}>
+                                {d === "Todos" ? "Todos" : `Década ${d}`}
                             </MenuItem>
                         ))}
                     </TextField>
@@ -123,15 +158,27 @@ const SalesRecordView = () => {
 
             {/* Indicadores */}
             <Grid container spacing={2}>
-                {indicators.map((indicator, idx) => (
+                {recordsData.map((item, idx) => (
                     <Grid item xs={12} sm={6} md={3} key={idx}>
-                        <SalesIndicatorCard {...indicator} />
+                        <SalesIndicatorCard
+                            title={item.title}
+                            value={item.value}
+                            subtitle={item.subtitle}
+                            icon={item.icon}
+                            colorKey={item.colorKey}
+                        />
                     </Grid>
                 ))}
             </Grid>
 
             {/* Tabla de ventas */}
-            <SalesTable filters={filters} />
+            <SalesTable
+                sales={sales}
+                filters={filters}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+            />
         </Box>
     );
 };

@@ -108,7 +108,7 @@ const [operationStatus, setOperationStatus] = useState(() => {
   }, []);
 
   useEffect(() => {
-    const setupStatus = JSON.parse(localStorage.getItem("OPERATION_STATUS_KEY"));
+    const setupStatus = JSON.parse(localStorage.getItem(OPERATION_STATUS_KEY));
 
     if (setupStatus?.isSetupComplete &&
       (progressData.currentMonth !== previousMonth || progressData.currentDecade !== previousDecade)) {
@@ -119,7 +119,6 @@ const [operationStatus, setOperationStatus] = useState(() => {
       });
     }
   }, [progressData.currentMonth, progressData.currentDecade]);
-
 
   useEffect(() => {
     const calculateSetupProgress = () => {

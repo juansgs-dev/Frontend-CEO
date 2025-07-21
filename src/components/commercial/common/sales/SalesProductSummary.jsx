@@ -7,7 +7,6 @@ import {
   Typography,
   LinearProgress,
   Divider,
-  Chip,
   useTheme,
   alpha
 } from "@mui/material";
@@ -18,9 +17,9 @@ const SalesProductSummary = ({ products }) => {
   const theme = useTheme();
 
   const getCustomProgressColor = (value) => {
-    if (value >= 80) return theme.palette.success.main;      // Azul comercial
-    if (value >= 40) return theme.palette.warning.main;      // Amarillo impulso
-    return theme.palette.error.main;                         // Rojo alerta
+    if (value >= 80) return theme.palette.primary.main;
+    if (value >= 40) return theme.palette.primary.light;
+    return theme.palette.info.main;
   };
 
   return (
@@ -37,30 +36,30 @@ const SalesProductSummary = ({ products }) => {
           {products.map((product) => {
             const progress = Math.round((product.soldD1 / product.monthlyGoal) * 100);
             const progressColor = getCustomProgressColor(progress);
-            const priceFactorColor = product.priceFactor < 0
-              ? theme.palette.error.dark
-              : theme.palette.success.dark;
 
             return (
               <Grid item xs={12} md={4} key={product.name}>
                 <Card
                   variant="outlined"
                   sx={{
-                    backgroundColor: alpha(theme.palette.primary.light, 0.03),
+                    borderLeft: `4px solid ${progressColor}`,
+                    backgroundColor: alpha(theme.palette.primary.light, 0.05),
                     height: "100%",
+                    '&:hover': {
+                      boxShadow: theme.shadows[4]
+                    }
                   }}
                 >
                   <CardContent>
                     <Box display="flex" alignItems="center" gap={1} mb={1}>
-                      <InventoryIcon color="action" />
-                      <Typography variant="subtitle1" fontWeight={600}>
+                      <InventoryIcon sx={{ color: progressColor }} />
+                      <Typography variant="subtitle1" fontWeight={700} color={progressColor}>
                         {product.name}
                       </Typography>
                     </Box>
 
                     <Typography variant="body2" color="text.secondary">
-                      Precio:{" "}
-                      <strong>${product.unitPrice.toLocaleString()}/unidad</strong>
+                      Precio: <strong>${product.unitPrice.toLocaleString()}/unidad</strong>
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Meta Mensual: <strong>{product.monthlyGoal} und</strong>
@@ -84,7 +83,8 @@ const SalesProductSummary = ({ products }) => {
                       />
                       <Typography
                         variant="caption"
-                        color="text.secondary"
+                        fontWeight={700}
+                        color={progressColor}
                       >
                         {progress}% meta D1
                       </Typography>
@@ -95,30 +95,6 @@ const SalesProductSummary = ({ products }) => {
                     <Typography variant="body2" color="text.secondary">
                       Stock actual: <strong>{product.stock} und</strong>
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" gutterBottom>
-                      Cobertura: <strong>{product.coverage}%</strong>
-                    </Typography>
-
-                    <Box mt={1} display="flex" gap={1} flexWrap="wrap">
-                      <Chip
-                        label={`Probabilidad Base: ${product.baseProbability}%`}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(theme.palette.secondary.main, 0.1),
-                          color: theme.palette.secondary.main,
-                          fontWeight: 600,
-                        }}
-                      />
-                      <Chip
-                        label={`Factor precio: ${product.priceFactor}%`}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(priceFactorColor, 0.15),
-                          color: priceFactorColor,
-                          fontWeight: 600,
-                        }}
-                      />
-                    </Box>
                   </CardContent>
                 </Card>
               </Grid>

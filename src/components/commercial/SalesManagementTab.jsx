@@ -16,6 +16,7 @@ import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import SalesDashboardView from "./views/SalesDashboardView";
 import SalesRecordView from "./views/SalesRecordView";
+import PendingCreditsView from "../credit/view/PendingCreditsView";
 
 
 const SalesManagementTab = () => {
@@ -87,12 +88,18 @@ const SalesManagementTab = () => {
                 iconPosition="start"
                 label="Registro de Ventas"
               />
+              <Tab
+                icon={<ShoppingCartIcon />}
+                iconPosition="start"
+                label="Créditos Pendientes"
+              />
             </Tabs>
           </Box>
 
           <Box sx={{ p: 3 }}>
             {tab === 0 && <SalesDashboardView />}
             {tab === 1 && <SalesRecordView />}
+            {tab === 2 && <PendingCreditsView />}
           </Box>
         </CardContent>
       </Card>

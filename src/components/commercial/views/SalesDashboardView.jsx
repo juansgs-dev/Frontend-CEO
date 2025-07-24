@@ -14,26 +14,10 @@ import SalesIndicatorCard from "../common/sales/SalesIndicatorCard";
 import SalesBarChart from "../common/sales/SalesBarChart";
 import ProbabilityFactors from "../common/sales/ProbabilityFactors";
 import SalesProductSummary from "../common/sales/SalesProductSummary";
-import AccountsReceivableSummary from "../common/sales/AccountsReceivableSummary";
-import InfoCard from "../../common/infoCard";
 import useIndicator from "../hooks/useIndicator";
 import useProductInventory from "../hooks/useProductInventory";
 
-const receivableData = [
-  {
-    term: 30,
-    amount: 32000000,
-    dueDate: "2025-02-15"
-  },
-  {
-    term: 60,
-    amount: 45000000,
-    dueDate: "2025-03-15"
-  }
-];
-
 const SalesDashboardView = () => {
-  const [receivables, setReceivables] = useState(receivableData);
 
   const {
     indicators,
@@ -177,10 +161,6 @@ const SalesDashboardView = () => {
 
       <Box mt={5}>
         <SalesProductSummary products={productData} />
-      </Box>
-
-      <Box mt={5}>
-        <AccountsReceivableSummary receivables={receivables} onCollect={handleCollect} />
       </Box>
     </Box>
   );

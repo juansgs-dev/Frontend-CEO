@@ -1,127 +1,125 @@
 import React, { useState } from 'react';
 import {
-  Box, Typography, CircularProgress, Table, TableBody, TableCell,
-  TableContainer, TableHead, TableRow, Paper, TextField, Alert, Button, useTheme
+  Box, CircularProgress, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Paper, Button, useTheme, Pagination, Alert
 } from '@mui/material';
 import usePendingCredits from '../hooks/usePendingCredits';
 import axios from 'axios';
+import ToastNotification, { showToast } from '../../alerts/ToastNotification';
+import { formatCurrency } from '../../../utils/formatters/currencyFormatters';
+import axiosInstance from '../../../services/api/axiosConfig';
 
 const PendingCreditsView = () => {
   const theme = useTheme();
-  const { pendingCredits, loading, error, refetch } = usePendingCredits(); // refetch para recargar después de cobrar
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const { pendingCredits, loading, error, setPendingCredits } = usePendingCredits();
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 5;
 
 const handleMarkAsPaid = async (operation_id) => {
   try {
-    const { data } = await axios.post('/credit/mark-as-paid', { operation_id });
-    if (data.ok) {
+    const response = await axiosInstance.post('/credit/mark-as-paid', { operation_id });
+
+    if (response.data.ok) {
       showToast('Crédito cobrado correctamente', 'success');
-      refetch(); // recargar lista
+
+      setPendingCredits(prev =>
+        prev.filter(credit => credit.id !== operation_id)
+      );
     } else {
-      showToast(data.message || 'No se pudo cobrar', 'warning');
+      showToast(response.data.message || 'No se pudo cobrar', 'warning');
     }
   } catch (err) {
+    console.error('Error al marcar como pagado:', err);
     showToast(err.response?.data?.message || 'Error al cobrar', 'error');
   }
 };
 
-  // Filtramos por fechas si están definidas
-  const filteredCredits = pendingCredits.filter(credit => {
-    const createdAt = new Date(credit.created_at);
-    if (startDate && createdAt < new Date(startDate)) return false;
-    if (endDate && createdAt > new Date(endDate)) return false;
-    return true;
-  });
+  const totalPages = Math.ceil(pendingCredits.length / rowsPerPage);
+  const currentPageItems = pendingCredits.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
 
   return (
     <Box p={4}>
-
-      <Box display="flex" gap={2} mb={3}>
-        <TextField
-          label="Desde"
-          type="date"
-          InputLabelProps={{ shrink: true }}
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
-        <TextField
-          label="Hasta"
-          type="date"
-          InputLabelProps={{ shrink: true }}
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
-      </Box>
-
       {loading && (
         <Box display="flex" justifyContent="center" my={4}>
           <CircularProgress />
         </Box>
       )}
 
-      {(error || errorMessage) && (
+      {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error || errorMessage}
-        </Alert>
-      )}
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {successMessage}
+          {error}
         </Alert>
       )}
 
       {!loading && !error && (
-        <TableContainer component={Paper} elevation={3}>
-          <Table>
-            <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
-              <TableRow>
-                <TableCell sx={{ color: 'white' }}>Fecha de Venta</TableCell>
-                <TableCell sx={{ color: 'white' }} align="right">Total ($)</TableCell>
-                <TableCell sx={{ color: 'white' }} align="right">Días de Crédito</TableCell>
-                <TableCell sx={{ color: 'white' }} align="right">Días Restantes</TableCell>
-                <TableCell sx={{ color: 'white' }} align="right">Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredCredits.length > 0 ? (
-                filteredCredits.map((credit) => {
-                  const canBePaid = credit.daysRemaining <= 0; // solo se puede pagar si venció
-                  return (
-                    <TableRow key={credit.id}>
-                      <TableCell>{new Date(credit.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell align="right">{credit.total_cost.toLocaleString()}</TableCell>
-                      <TableCell align="right">{credit.credit_days}</TableCell>
-                      <TableCell align="right">
-                        {credit.daysRemaining > 0 ? credit.daysRemaining : 'Vencido'}
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          variant="contained"
-                          color="primary"
-                          size="small"
-                          disabled={!canBePaid}
-                          onClick={() => handleMarkAsPaid(credit.id)}
-                        >
-                          Cobrar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
+        <>
+
+        <ToastNotification />
+
+          <TableContainer component={Paper} elevation={3}>
+            <Table>
+              <TableHead sx={{ bgcolor: theme.palette.primary.main }}>
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    No hay créditos pendientes en este rango de fechas.
-                  </TableCell>
+                  <TableCell sx={{ color: 'white' }}>Id</TableCell>
+                  <TableCell sx={{ color: 'white' }}>Fecha de Venta</TableCell>
+                  <TableCell sx={{ color: 'white' }} align="right">Total ($)</TableCell>
+                  <TableCell sx={{ color: 'white' }} align="right">Días de Crédito</TableCell>
+                  <TableCell sx={{ color: 'white' }} align="right">Días Restantes</TableCell>
+                  <TableCell sx={{ color: 'white' }} align="right">Acciones</TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {currentPageItems.length > 0 ? (
+                  currentPageItems.map((credit) => {
+                    const canBePaid = credit.days_remaining <= 0;
+                    return (
+                      <TableRow key={credit.id}>
+                        <TableCell>{credit.id}</TableCell>
+                        <TableCell>{new Date(credit.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell align="right">{formatCurrency(credit.total_cost)}</TableCell>
+                        <TableCell align="right">{credit.credit_days}</TableCell>
+                        <TableCell align="right">
+                          {credit.days_remaining > 0 ? credit.days_remaining : 'Vencido'}
+                        </TableCell>
+                        <TableCell align="right">
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            disabled={!canBePaid}
+                            onClick={() => handleMarkAsPaid(credit.id)}
+                          >
+                            Cobrar
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No hay créditos pendientes.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {totalPages > 1 && (
+            <Box mt={2} display="flex" justifyContent="center">
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={(_, value) => setPage(value)}
+                color="primary"
+              />
+            </Box>
+          )}
+        </>
       )}
     </Box>
   );

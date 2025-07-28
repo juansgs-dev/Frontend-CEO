@@ -19,10 +19,10 @@ const getTypeColor = (type) =>
   type === "Empresa"
     ? "info"
     : type === "Cliente Mayorista"
-    ? "primary"
-    : type === "Cliente Natural"
-    ? "warning"
-    : "default";
+      ? "primary"
+      : type === "Cliente Natural"
+        ? "warning"
+        : "default";
 
 const SalesTable = ({ sales = [], filters, page, setPage, totalPages }) => {
   const theme = useTheme();
@@ -57,23 +57,23 @@ const SalesTable = ({ sales = [], filters, page, setPage, totalPages }) => {
 
   const sorted = sortField
     ? [...filtered].sort((a, b) => {
-        const aValue = a[sortField];
-        const bValue = b[sortField];
+      const aValue = a[sortField];
+      const bValue = b[sortField];
 
-        if (aValue == null || bValue == null) return 0;
+      if (aValue == null || bValue == null) return 0;
 
-        if (typeof aValue === "string" && typeof bValue === "string") {
-          return sortDirection === "asc"
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortDirection === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
 
-        if (typeof aValue === "number" && typeof bValue === "number") {
-          return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-        }
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      }
 
-        return 0;
-      })
+      return 0;
+    })
     : filtered;
 
   return (
@@ -132,7 +132,14 @@ const SalesTable = ({ sales = [], filters, page, setPage, totalPages }) => {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" color="text.secondary">
-                    {row.date}
+                    {new Date(row.date).toLocaleString('es-CO', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false
+                    })}
                   </Typography>
                 </TableCell>
               </TableRow>
